@@ -1,10 +1,15 @@
 // based on https://codepen.io/tsuhre/details/xgmEPe
 const ns = "http://www.w3.org/2000/svg";
 const myCanvas = document.getElementById("svgCanvas");
+const stepButton = document.getElementById("stepButton");
 
-const gridSize = 100;
-const gridToPixelScale = 5;
+const gridWidth = 100;
+const gridHeight = 100;
+const gridSize = 2;
+const gridScale = 5;
 let points = [];
+let lines = [];
+let startingSeeds = 10;
 
 const dirs = [
     [0, 1], //n 6
@@ -18,24 +23,55 @@ const dirs = [
 ];
 
 function newCell(x,y){
+    const offset = gridSize / 2;
     return {
-        pos: [x,y],
+        // pos is centre of grid cell
+        pos: [x + offset,y + offset],
         avail: true
     }
 }
 
 /////////////////// init
-myCanvas.setAttribute('width', gridSize * gridToPixelScale);
-myCanvas.setAttribute('height', gridSize * gridToPixelScale);
-myCanvas.setAttribute('viewBox', `0 0 ${gridSize} ${gridSize}`);
+myCanvas.setAttribute('width', gridWidth * gridScale);
+myCanvas.setAttribute('height', gridHeight * gridScale);
+myCanvas.setAttribute('viewBox', `0 0 ${gridWidth} ${gridHeight}`);
 
 // setup grid spaces
-for (let i = 0; i <= gridSize; i++) {
+for (let i = 0; i < gridWidth / gridSize; i++) {
     points.push([]);
-    for (let o = 0; o <= gridSize; o++) {
-        points[i].push(newCell(i,o));
+    for (let o = 0; o < gridHeight / gridSize; o++) {
+        const cell = newCell(i * gridSize,o * gridSize);
+        points[i].push(cell);
+        let gridCircle = document.createElementNS(ns, "circle");
+        gridCircle.setAttribute("cx", cell.pos[0]);
+        gridCircle.setAttribute("cy", cell.pos[1]);
+        gridCircle.setAttribute("r", gridSize/3);
+        gridCircle.setAttribute("stroke", "white");
+        gridCircle.setAttribute("stroke-width", "0.2");
+        myCanvas.appendChild(gridCircle);
     }
 }
+
+// ok so we need to create a way to step each one at a time
+// maybe also we want to make single path instead of a lot of lines
+
+function plantSeed(startPos){
+    let lineGroup = document.createElementNS(ns, "g");
+    let startCircle = document.createElementNS(ns, "circle");
+    startCircle.setAttribute("cx", startPos[0]);
+    startCircle.setAttribute("cy", startPos[1]);
+    startCircle.setAttribute("r", 1);
+    startCircle.setAttribute("stroke", "white");
+    startCircle.setAttribute("stroke-width", "0.2");
+    lineGroup.appendChild(startCircle);
+    myCanvas.appendChild(lineGroup);
+}
+
+
+
+// for (let i = 0; i < startingSeeds; i++) {
+//     plantSeed([Math.floor(Math.random() * gridSize), Math.floor(Math.random() * gridSize)]);
+// }
 
 /////////////////// random line
 function randomWalk(start, steps){
