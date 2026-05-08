@@ -5,7 +5,7 @@ const stepButton = document.getElementById("stepButton");
 
 const gridWidth = 100;
 const gridHeight = 100;
-const gridSize = 2;
+const gridSize = 5;
 const gridScale = 5;
 let points = [];
 let lines = [];
@@ -42,36 +42,40 @@ for (let i = 0; i < gridWidth / gridSize; i++) {
     for (let o = 0; o < gridHeight / gridSize; o++) {
         const cell = newCell(i * gridSize,o * gridSize);
         points[i].push(cell);
-        let gridCircle = document.createElementNS(ns, "circle");
-        gridCircle.setAttribute("cx", cell.pos[0]);
-        gridCircle.setAttribute("cy", cell.pos[1]);
-        gridCircle.setAttribute("r", gridSize/3);
-        gridCircle.setAttribute("stroke", "white");
-        gridCircle.setAttribute("stroke-width", "0.2");
-        myCanvas.appendChild(gridCircle);
     }
 }
 
 // ok so we need to create a way to step each one at a time
 // maybe also we want to make single path instead of a lot of lines
 
-function plantSeed(startPos){
+function plantSeed(startPoint){
+    let startPos = points[startPoint[0]][startPoint[1]].pos
     let lineGroup = document.createElementNS(ns, "g");
     let startCircle = document.createElementNS(ns, "circle");
     startCircle.setAttribute("cx", startPos[0]);
     startCircle.setAttribute("cy", startPos[1]);
-    startCircle.setAttribute("r", 1);
+    startCircle.setAttribute("r", gridSize / 3);
     startCircle.setAttribute("stroke", "white");
     startCircle.setAttribute("stroke-width", "0.2");
     lineGroup.appendChild(startCircle);
     myCanvas.appendChild(lineGroup);
+    lines.push({
+        shapeGroup: lineGroup,
+        lastPoint: startPoint
+    });
 }
 
-
-
-// for (let i = 0; i < startingSeeds; i++) {
-//     plantSeed([Math.floor(Math.random() * gridSize), Math.floor(Math.random() * gridSize)]);
-// }
+// generate start
+for (let i = 0; i < startingSeeds; i++) {
+    let randX = Math.floor(Math.random() * (gridWidth / gridSize));
+    let randY = Math.floor(Math.random() * (gridHeight / gridSize));
+    while(points[randX][randY].avail === false){
+        randX = Math.floor(Math.random() * (gridWidth / gridSize));
+        randY = Math.floor(Math.random() * (gridHeight / gridSize));
+    }
+    points[randX][randY].avail = false;
+    plantSeed([randX, randY]);
+}
 
 /////////////////// random line
 function randomWalk(start, steps){
@@ -96,7 +100,7 @@ function randomWalk(start, steps){
     myCanvas.appendChild(newLineGroup);
 }
 
-randomWalk([50, 50], 1000);
+//randomWalk([50, 50], 1000);
 
 // is this needed?
 function randomDirection(){
