@@ -5,7 +5,7 @@ const stepButton = document.getElementById("stepButton");
 
 const gridWidth = 100;
 const gridHeight = 100;
-const gridSize = 5;
+const gridSize = 2;
 const gridScale = 5;
 let points = [];
 let lines = [];
@@ -55,14 +55,18 @@ function plantSeed(startPoint){
     startCircle.setAttribute("cx", startPos[0]);
     startCircle.setAttribute("cy", startPos[1]);
     startCircle.setAttribute("r", gridSize / 3);
-    startCircle.setAttribute("stroke", "white");
-    startCircle.setAttribute("stroke-width", "0.2");
+    lineGroup.setAttribute("stroke", "white");
+    lineGroup.setAttribute("stroke-width", "0.2");
     lineGroup.appendChild(startCircle);
     myCanvas.appendChild(lineGroup);
     lines.push({
         shapeGroup: lineGroup,
         lastPoint: startPoint
     });
+}
+
+function endLine(){
+
 }
 
 // generate start
@@ -76,6 +80,27 @@ for (let i = 0; i < startingSeeds; i++) {
     points[randX][randY].avail = false;
     plantSeed([randX, randY]);
 }
+
+function incrementLines(){
+    for (let i = 0; i < lines.length; i++) {
+        let nextPoint = newRandomPoint(lines[i].lastPoint);
+        if(!nextPoint){
+            lines.splice(i, 1);
+        } else {
+            let newLine = document.createElementNS(ns, "line");
+            let startPos = points[lines[i].lastPoint[0]][lines[i].lastPoint[1]].pos;
+            let nextPos = points[nextPoint[0]][nextPoint[1]].pos;
+            newLine.setAttribute("x1", startPos[0]);
+            newLine.setAttribute("y1", startPos[1]);
+            newLine.setAttribute("x2", nextPos[0]);
+            newLine.setAttribute("y2", nextPos[1]);
+            lines[i].shapeGroup.appendChild(newLine);
+            lines[i].lastPoint = nextPoint;
+            points[nextPoint[0]][nextPoint[1]].avail = false;
+        }
+    }
+}
+stepButton.addEventListener("click", incrementLines);
 
 /////////////////// random line
 function randomWalk(start, steps){
@@ -111,16 +136,14 @@ function randomDirection(){
 function newRandomPoint(startPoint){
     let randomDirIndex = Math.floor(Math.random() * dirs.length);
     let newDirection = dirs[randomDirIndex];
-    //console.log(newDirection);
-    //console.log(fanOut(randomDirIndex));
     let newPoint = findPoint(startPoint, newDirection);
     // if selected point is not available
-    if(!points[newPoint[0]][newPoint[1]].avail || !newPoint){
+    if(points[newPoint[0]] === undefined || points[newPoint[0]][newPoint[1]] === undefined || !points[newPoint[0]][newPoint[1]].avail){
         newPoint = null;
         let pointsToCheck = fanOut(randomDirIndex);
         for (let i = 0; i < pointsToCheck.length; i++) {
             let checkPoint = findPoint(startPoint, pointsToCheck[i]);
-            if(points[checkPoint[0]][checkPoint[1]].avail){
+            if(points[checkPoint[0]] && points[checkPoint[0]][checkPoint[1]] && points[checkPoint[0]][checkPoint[1]].avail){
                 newPoint = checkPoint;
                 break;
             }
