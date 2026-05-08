@@ -7,14 +7,14 @@ const gridToPixelScale = 5;
 let points = [];
 
 const dirs = [
-    [0, 1], //n
-    [1, 1], //ne
-    [1, 0], //e
-    [1, -1], //se
-    [0, -1], //s
-    [-1, -1], //sw
-    [-1, 0], //w
-    [-1, 1], //nw
+    [0, 1], //n 6
+    [1, 1], //ne 8
+    [1, 0], //e 7
+    [1, -1], //se 5
+    [0, -1], //s 3
+    [-1, -1], //sw 1
+    [-1, 0], //w 2
+    [-1, 1], //nw 4
 ];
 
 function newCell(x,y){
@@ -38,28 +38,16 @@ for (let i = 0; i <= gridSize; i++) {
 }
 
 /////////////////// random line
-// mutating avail in array?
-let newLine = document.createElementNS(ns, "polyline");
-newLine.setAttribute("points", "10, 40 20, 60");
-newLine.setAttribute("stroke", "white");
-newLine.setAttribute("stroke-width", "1");
-myCanvas.appendChild(newLine);
-
-console.log(points);
-
 function randomWalk(start, steps){
     // set up group
     let newLineGroup = document.createElementNS(ns, "g");
     newLineGroup.setAttribute("stroke", "white");
-    newLineGroup.setAttribute("stroke-width", "0.1");
+    newLineGroup.setAttribute("stroke-width", "0.2");
     let currentPoint = start;
     points[start[0]][start[1]].avail = false;
     for (let i = 0; i < steps; i++) {
-        let newDirection = randomDirection();
-        let nextPoint = [
-            currentPoint[0] + newDirection[0],
-            currentPoint[1] + newDirection[1]
-        ];
+        let nextPoint = newRandomPoint(currentPoint);
+        if(!nextPoint) {break}
         let newLine = document.createElementNS(ns, "line");
         newLine.setAttribute("x1", currentPoint[0]);
         newLine.setAttribute("y1", currentPoint[1]);
@@ -72,8 +60,56 @@ function randomWalk(start, steps){
     myCanvas.appendChild(newLineGroup);
 }
 
-randomWalk([50, 50], 10);
+randomWalk([50, 50], 1000);
 
+// is this needed?
 function randomDirection(){
     return dirs[Math.floor(Math.random() * dirs.length)];
+}
+
+// this is written for random new point, rather than checking directed new point
+function newRandomPoint(startPoint){
+    let randomDirIndex = Math.floor(Math.random() * dirs.length);
+    let newDirection = dirs[randomDirIndex];
+    //console.log(newDirection);
+    //console.log(fanOut(randomDirIndex));
+    let newPoint = findPoint(startPoint, newDirection);
+    // if selected point is not available
+    if(!points[newPoint[0]][newPoint[1]].avail || !newPoint){
+        newPoint = null;
+        let pointsToCheck = fanOut(randomDirIndex);
+        for (let i = 0; i < pointsToCheck.length; i++) {
+            let checkPoint = findPoint(startPoint, pointsToCheck[i]);
+            if(points[checkPoint[0]][checkPoint[1]].avail){
+                newPoint = checkPoint;
+                break;
+            }
+        }
+    }
+    return newPoint;
+}
+
+function findPoint(startPoint, dir){
+    return [
+        startPoint[0] + dir[0],
+        startPoint[1] + dir[1]
+    ];
+}
+
+// adapted from Source - https://stackoverflow.com/a/19358740
+// Posted by Stefan Seemayer, modified by community. See post 'Timeline' for change history
+// Retrieved 2026-05-08, License - CC BY-SA 3.0
+
+function fanOut(start){
+    //let startDirection = (Math.floor(Math.random() * 2) * 2) - 1;
+    // current always starts in one direction ^ above might be used to modulate?
+    let order = [];
+    let i;
+    let len = dirs.length;
+    for(i = 1; i <= (len/2) - 1; i++){
+        order.push(dirs[((start + i) + len) % len]);
+        order.push(dirs[((start - i) + len) % len]);
+    }
+    order.push(dirs[((start + i) + len) % len]);
+    return order;
 }
