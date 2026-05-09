@@ -3,10 +3,15 @@ const ns = "http://www.w3.org/2000/svg";
 const myCanvas = document.getElementById("svgCanvas");
 const stepButton = document.getElementById("stepButton");
 
+const colour1 = "black";
+const colour2 = "white";
+
 const gridWidth = 100;
 const gridHeight = 100;
 const gridSize = 2;
 const gridScale = 5;
+// points stores grid as x y based on scale
+// pos stores centre position of point
 let points = [];
 let lines = [];
 let startingSeeds = 10;
@@ -36,7 +41,7 @@ myCanvas.setAttribute('width', gridWidth * gridScale);
 myCanvas.setAttribute('height', gridHeight * gridScale);
 myCanvas.setAttribute('viewBox', `0 0 ${gridWidth} ${gridHeight}`);
 
-// setup grid spaces
+// setup grid spaces : stored as points[x][y]
 for (let i = 0; i < gridWidth / gridSize; i++) {
     points.push([]);
     for (let o = 0; o < gridHeight / gridSize; o++) {
@@ -51,29 +56,13 @@ for (let i = 0; i < gridWidth / gridSize; i++) {
 function plantSeed(startPoint){
     let startPos = points[startPoint[0]][startPoint[1]].pos
     let lineGroup = document.createElementNS(ns, "g");
-    let startCircle = document.createElementNS(ns, "circle");
-    startCircle.setAttribute("cx", startPos[0]);
-    startCircle.setAttribute("cy", startPos[1]);
-    startCircle.setAttribute("r", gridSize / 3);
-    startCircle.setAttribute("fill", "black");
-    lineGroup.setAttribute("stroke", "white");
-    lineGroup.setAttribute("stroke-width", "0.2");
-    lineGroup.appendChild(startCircle);
+    let startStud = createCircleStud(startPos);
+    lineGroup.appendChild(startStud);
     myCanvas.appendChild(lineGroup);
     lines.push({
         shapeGroup: lineGroup,
         lastPoint: startPoint
     });
-}
-
-function endLine(lineID){
-    let endPos = points[lines[lineID].lastPoint[0]][lines[lineID].lastPoint[1]].pos;
-    let endCircle = document.createElementNS(ns, "circle");
-    endCircle.setAttribute("cx", endPos[0]);
-    endCircle.setAttribute("cy", endPos[1]);
-    endCircle.setAttribute("r", gridSize / 3);
-    endCircle.setAttribute("fill", "black");
-    lines[lineID].shapeGroup.appendChild(endCircle);
 }
 
 // generate start
@@ -92,16 +81,19 @@ function incrementLines(){
     for (let i = 0; i < lines.length; i++) {
         let nextPoint = newRandomPoint(lines[i].lastPoint);
         if(!nextPoint){
-            endLine(i);
+            let endStud = createCircleStud(findPosFromPoint(lines[i].lastPoint));
+            lines[i].shapeGroup.appendChild(endStud);
             lines.splice(i, 1);
         } else {
             let newLine = document.createElementNS(ns, "line");
-            let startPos = points[lines[i].lastPoint[0]][lines[i].lastPoint[1]].pos;
+            let startPos = findPosFromPoint(lines[i].lastPoint);
             let nextPos = points[nextPoint[0]][nextPoint[1]].pos;
             newLine.setAttribute("x1", startPos[0]);
             newLine.setAttribute("y1", startPos[1]);
             newLine.setAttribute("x2", nextPos[0]);
             newLine.setAttribute("y2", nextPos[1]);
+            newLine.setAttribute("stroke", "white");
+            newLine.setAttribute("stroke-width", "0.2");
             lines[i].shapeGroup.prepend(newLine);
             lines[i].lastPoint = nextPoint;
             points[nextPoint[0]][nextPoint[1]].avail = false;
@@ -172,6 +164,10 @@ function findPoint(startPoint, dir){
     ];
 }
 
+function findPosFromPoint(point){
+    return points[point[0]][point[1]].pos;
+}
+
 // adapted from Source - https://stackoverflow.com/a/19358740
 // Posted by Stefan Seemayer, modified by community. See post 'Timeline' for change history
 // Retrieved 2026-05-08, License - CC BY-SA 3.0
@@ -188,4 +184,16 @@ function fanOut(start){
     }
     order.push(dirs[((start + i) + len) % len]);
     return order;
+}
+
+///////// create svg elements
+function createCircleStud(pos){
+    let circleStud = document.createElementNS(ns, "circle");
+    circleStud.setAttribute("cx", pos[0]);
+    circleStud.setAttribute("cy", pos[1]);
+    circleStud.setAttribute("r", gridSize / 3);
+    circleStud.setAttribute("fill", colour1);
+    circleStud.setAttribute("stroke", colour2);
+    circleStud.setAttribute("stroke-width", "0.2");
+    return circleStud;
 }
