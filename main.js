@@ -54,13 +54,19 @@ for (let i = 0; i < gridWidth / gridSize; i++) {
 // maybe also we want to make single path instead of a lot of lines
 
 function plantSeed(startPoint){
-    let startPos = points[startPoint[0]][startPoint[1]].pos
+    let startPos = findPosFromPoint(startPoint);
     let lineGroup = document.createElementNS(ns, "g");
+    let line = document.createElementNS(ns, "polyline");
+    line.setAttribute("points", `${startPos[0]}, ${startPos[1]}`);
+    line.setAttribute("stroke", colour2);
+    line.setAttribute("stroke-width", "0.2");
     let startStud = createCircleStud(startPos);
+    lineGroup.appendChild(line);
     lineGroup.appendChild(startStud);
     myCanvas.appendChild(lineGroup);
     lines.push({
         shapeGroup: lineGroup,
+        thisLine: line,
         lastPoint: startPoint
     });
 }
@@ -80,23 +86,18 @@ for (let i = 0; i < startingSeeds; i++) {
 function incrementLines(){
     for (let i = 0; i < lines.length; i++) {
         let nextPoint = newRandomPoint(lines[i].lastPoint);
-        if(!nextPoint){
+        if(nextPoint){
+            let nextPos = findPosFromPoint(nextPoint);
+            let newLinePoint = myCanvas.createSVGPoint();
+            newLinePoint.x = nextPos[0];
+            newLinePoint.y = nextPos[1];
+            lines[i].thisLine.points.appendItem(newLinePoint);
+            lines[i].lastPoint = nextPoint;
+            points[nextPoint[0]][nextPoint[1]].avail = false;
+        } else {
             let endStud = createCircleStud(findPosFromPoint(lines[i].lastPoint));
             lines[i].shapeGroup.appendChild(endStud);
             lines.splice(i, 1);
-        } else {
-            let newLine = document.createElementNS(ns, "line");
-            let startPos = findPosFromPoint(lines[i].lastPoint);
-            let nextPos = points[nextPoint[0]][nextPoint[1]].pos;
-            newLine.setAttribute("x1", startPos[0]);
-            newLine.setAttribute("y1", startPos[1]);
-            newLine.setAttribute("x2", nextPos[0]);
-            newLine.setAttribute("y2", nextPos[1]);
-            newLine.setAttribute("stroke", "white");
-            newLine.setAttribute("stroke-width", "0.2");
-            lines[i].shapeGroup.prepend(newLine);
-            lines[i].lastPoint = nextPoint;
-            points[nextPoint[0]][nextPoint[1]].avail = false;
         }
     }
 }
@@ -106,31 +107,6 @@ stepButton.addEventListener("click", incrementLines);
 // while(lines.length > 0){
 //     incrementLines();
 // }
-
-/////////////////// random line
-function randomWalk(start, steps){
-    // set up group
-    let newLineGroup = document.createElementNS(ns, "g");
-    newLineGroup.setAttribute("stroke", "white");
-    newLineGroup.setAttribute("stroke-width", "0.2");
-    let currentPoint = start;
-    points[start[0]][start[1]].avail = false;
-    for (let i = 0; i < steps; i++) {
-        let nextPoint = newRandomPoint(currentPoint);
-        if(!nextPoint) {break}
-        let newLine = document.createElementNS(ns, "line");
-        newLine.setAttribute("x1", currentPoint[0]);
-        newLine.setAttribute("y1", currentPoint[1]);
-        newLine.setAttribute("x2", nextPoint[0]);
-        newLine.setAttribute("y2", nextPoint[1]);
-        newLineGroup.appendChild(newLine);
-        points[nextPoint[0]][nextPoint[1]].avail = false;
-        currentPoint = nextPoint;
-    }
-    myCanvas.appendChild(newLineGroup);
-}
-
-//randomWalk([50, 50], 1000);
 
 // is this needed?
 function randomDirection(){
