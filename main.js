@@ -55,6 +55,7 @@ function plantSeed(startPoint){
     startCircle.setAttribute("cx", startPos[0]);
     startCircle.setAttribute("cy", startPos[1]);
     startCircle.setAttribute("r", gridSize / 3);
+    startCircle.setAttribute("fill", "black");
     lineGroup.setAttribute("stroke", "white");
     lineGroup.setAttribute("stroke-width", "0.2");
     lineGroup.appendChild(startCircle);
@@ -65,8 +66,14 @@ function plantSeed(startPoint){
     });
 }
 
-function endLine(){
-
+function endLine(lineID){
+    let endPos = points[lines[lineID].lastPoint[0]][lines[lineID].lastPoint[1]].pos;
+    let endCircle = document.createElementNS(ns, "circle");
+    endCircle.setAttribute("cx", endPos[0]);
+    endCircle.setAttribute("cy", endPos[1]);
+    endCircle.setAttribute("r", gridSize / 3);
+    endCircle.setAttribute("fill", "black");
+    lines[lineID].shapeGroup.appendChild(endCircle);
 }
 
 // generate start
@@ -85,6 +92,7 @@ function incrementLines(){
     for (let i = 0; i < lines.length; i++) {
         let nextPoint = newRandomPoint(lines[i].lastPoint);
         if(!nextPoint){
+            endLine(i);
             lines.splice(i, 1);
         } else {
             let newLine = document.createElementNS(ns, "line");
@@ -94,13 +102,18 @@ function incrementLines(){
             newLine.setAttribute("y1", startPos[1]);
             newLine.setAttribute("x2", nextPos[0]);
             newLine.setAttribute("y2", nextPos[1]);
-            lines[i].shapeGroup.appendChild(newLine);
+            lines[i].shapeGroup.prepend(newLine);
             lines[i].lastPoint = nextPoint;
             points[nextPoint[0]][nextPoint[1]].avail = false;
         }
     }
 }
 stepButton.addEventListener("click", incrementLines);
+
+// gen to end
+// while(lines.length > 0){
+//     incrementLines();
+// }
 
 /////////////////// random line
 function randomWalk(start, steps){
