@@ -143,15 +143,18 @@ function newRandomPoint(startPoint){
     let newDirection = dirs[randomDirIndex];
     let newPoint = findPoint(startPoint, newDirection);
     // if selected point is not available
-    if(points[newPoint[0]] === undefined || points[newPoint[0]][newPoint[1]] === undefined || !points[newPoint[0]][newPoint[1]].avail){
-        newPoint = null;
-        let pointsToCheck = fanOut(randomDirIndex);
-        for (let i = 0; i < pointsToCheck.length; i++) {
-            let checkPoint = findPoint(startPoint, pointsToCheck[i]);
-            if(points[checkPoint[0]] && points[checkPoint[0]][checkPoint[1]] && points[checkPoint[0]][checkPoint[1]].avail){
-                newPoint = checkPoint;
-                break;
-            }
+    if(points[newPoint[0]] === undefined
+       || points[newPoint[0]][newPoint[1]] === undefined
+       || !points[newPoint[0]][newPoint[1]].avail) {
+            newPoint = null;
+            let pointsToCheck = fanOut(randomDirIndex);
+            for (let i = 0; i < pointsToCheck.length; i++) {
+                let checkPoint = findPoint(startPoint, pointsToCheck[i]);
+                if(points[checkPoint[0]] && points[checkPoint[0]][checkPoint[1]]
+                    && points[checkPoint[0]][checkPoint[1]].avail){
+                        newPoint = checkPoint;
+                        break;
+                }
         }
     }
     return newPoint;
